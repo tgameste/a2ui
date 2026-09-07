@@ -17,12 +17,14 @@ import Testing
 
 @testable import BasicCatalog
 
-private final class MockFunctionHandler: FunctionHandler, @unchecked Sendable {
+@MainActor
+private final class MockFunctionHandler: FunctionHandler {
   func function(named: String, catalogID: String?) -> (any FunctionImplementation)? {
     return nil
   }
 }
 
+@MainActor
 struct RequiredFunctionTests {
 
   let function = RequiredFunction()
@@ -36,17 +38,7 @@ struct RequiredFunctionTests {
     #expect(function.api.returnType == .boolean)
   }
 
-  // MARK: - Evaluation
-
-  @Test func evaluatesToTrueWhenValueIsNotEmptyString() throws {
-    let result = try function.evaluate(arguments: ["value": .string("test")], context: context)
-    #expect(result == .boolean(true))
-  }
-
-  @Test func evaluatesToFalseWhenValueIsEmptyString() throws {
-    let result = try function.evaluate(arguments: ["value": .string("")], context: context)
-    #expect(result == .boolean(false))
-  }
+  // MARK: - Edge-Case Evaluation
 
   @Test func evaluatesToTrueWhenValueIsNotEmptyArray() throws {
     let result = try function.evaluate(

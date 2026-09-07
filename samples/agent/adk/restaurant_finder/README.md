@@ -3,7 +3,9 @@
 Sample Google ADK-based Restaurant finder agent that uses a2ui UI and is hosted as an A2A server agent.
 Agent generated with `agents-cli` version `1.4.2`
 
-## Project Structure
+This sample is featured in [Quickstart: Run A2UI in 5 Minutes](https://a2ui.org/quickstart). Refer to the guide for end-to-end setup and run instructions.
+
+## Prerequisites
 
 ```
 restaurant-finder/

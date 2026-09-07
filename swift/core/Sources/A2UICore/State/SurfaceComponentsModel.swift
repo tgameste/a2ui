@@ -14,21 +14,20 @@
 
 import Combine
 import Foundation
+import OrderedJSON
 
 /// Manages a flat collection of ``ComponentModel`` instances by ID.
 ///
 /// Mirrors `SurfaceComponentsModel` in the core blueprint and
-/// `web_core`. This is a pure data container with no schema awareness
-/// or validation logic — the `MessageProcessor` handles validation
-/// before adding components here.
-public final class SurfaceComponentsModel: @unchecked Sendable, ObservableObject {
+/// `web_core`.
+@MainActor
+public final class SurfaceComponentsModel: ObservableObject {
 
-  private let lock = NSRecursiveLock()
   private let componentsSubject: CurrentValueSubject<[String: ComponentModel], Never>
 
   /// The current components map.
   public var components: [String: ComponentModel] {
-    lock.withLock { componentsSubject.value }
+    componentsSubject.value
   }
 
   /// Emits the components map after each update is stored, and replays the
@@ -47,30 +46,49 @@ public final class SurfaceComponentsModel: @unchecked Sendable, ObservableObject
   /// - Parameter id: The component ID to look up.
   /// - Returns: The `ComponentModel` if found, otherwise `nil`.
   public func get(_ id: String) -> ComponentModel? {
-    lock.withLock { componentsSubject.value[id] }
+    componentsSubject.value[id]
   }
 
   /// Adds or replaces a component in the collection.
   ///
   /// - Parameter component: The component model to add.
   public func addComponent(_ component: ComponentModel) {
-    lock.withLock {
-      objectWillChange.send()
-      var current = componentsSubject.value
-      current[component.id] = component
-      componentsSubject.send(current)
-    }
+    objectWillChange.send()
+    var current = componentsSubject.value
+    current[component.id] = component
+    componentsSubject.send(current)
   }
 
   /// Removes the component with the given ID.
   ///
   /// - Parameter id: The component ID to remove.
   public func removeComponent(_ id: String) {
-    lock.withLock {
-      objectWillChange.send()
-      var current = componentsSubject.value
-      current.removeValue(forKey: id)
-      componentsSubject.send(current)
+    objectWillChange.send()
+    var current = componentsSubject.value
+    current.removeValue(forKey: id)
+    componentsSubject.send(current)
+  }
+
+  /// Validates references across the component graph
+  /// (root presence id='root', dangling references, orphan nodes).
+  ///
+  /// - Parameter config: The validation configuration.
+  /// - Throws: `A2UIIntegrityError` if graph topology validation fails.
+  public func validateReferences(config: ValidationConfig = .strict) throws {
+    let rawComponents: [[String: JSONValue]] = componentsSubject.value.values.map { component in
+      var dictionary: [String: JSONValue] = [
+        "id": .string(component.id),
+        "component": .string(component.type),
+      ]
+      for (key, value) in component.properties {
+        dictionary[key] = value
+      }
+      return dictionary
     }
+    try GraphTopologyValidator.validate(
+      components: rawComponents,
+      rootID: "root",
+      config: config
+    )
   }
 }

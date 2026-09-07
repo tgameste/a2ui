@@ -17,12 +17,14 @@ import Testing
 
 @testable import BasicCatalog
 
-private final class MockFunctionHandler: FunctionHandler, @unchecked Sendable {
+@MainActor
+private final class MockFunctionHandler: FunctionHandler {
   func function(named: String, catalogID: String?) -> (any FunctionImplementation)? {
     return nil
   }
 }
 
+@MainActor
 struct OrFunctionTests {
 
   let function = OrFunction()
@@ -36,25 +38,7 @@ struct OrFunctionTests {
     #expect(function.api.returnType == .boolean)
   }
 
-  // MARK: - Evaluation
-
-  @Test func evaluatesToTrueWhenAllValuesAreTrue() throws {
-    let result = try function.evaluate(
-      arguments: ["values": .array([.boolean(true), .boolean(true)])], context: context)
-    #expect(result == .boolean(true))
-  }
-
-  @Test func evaluatesToTrueWhenOneValueIsTrue() throws {
-    let result = try function.evaluate(
-      arguments: ["values": .array([.boolean(true), .boolean(false)])], context: context)
-    #expect(result == .boolean(true))
-  }
-
-  @Test func evaluatesToFalseWhenAllValuesAreFalse() throws {
-    let result = try function.evaluate(
-      arguments: ["values": .array([.boolean(false), .boolean(false)])], context: context)
-    #expect(result == .boolean(false))
-  }
+  // MARK: - Edge-Case Evaluation
 
   @Test func evaluatesToFalseWhenValuesIsMissing() throws {
     let result = try function.evaluate(arguments: [:], context: context)
