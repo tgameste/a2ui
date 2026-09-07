@@ -284,3 +284,5 @@ class RizzchartsAgent:
             ),
             disallow_transfer_to_peers=True,
         )
+
+root_agent = RizzchartsAgent(base_url=os.getenv("BASE_URL", "http://localhost:10002"))

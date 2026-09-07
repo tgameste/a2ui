@@ -1,26 +1,93 @@
-# File upload summarizer agent
+# file-upload-summarizer
 
-A reference A2UI Agent demonstrating host-delegated inversion of control (IoC) file uploads and out-of-band pointer resolution without context bloat.
+A reference A2UI Agent demonstrating Host-Delegated IoC File Uploads and zero-context-bloat Pointer Resolution
+Agent generated with `agents-cli` version `1.4.2`
 
-## Overview
+## Project Structure
 
-This agent pairs with the Angular host application in `samples/community/client/angular/projects/file_upload`. It provides:
+```
+file-upload-summarizer/
+├── file_upload_summarizer/         # Core agent code
+│   ├── agent.py               # Main agent logic
+│   ├── fast_api_app.py        # FastAPI Backend server
+│   └── app_utils/             # App utilities and helpers
+├── tests/                     # Unit, integration, and load tests
+├── GEMINI.md                  # AI-assisted development guide
+└── pyproject.toml             # Project dependencies
+```
 
-- **Mock Drive v3 REST API**: Embedded HTTP endpoints (`POST /api/mock-drive/v3/files` and `GET /api/mock-drive/v3/files/{id}`) for testing uploads and pointer resolution locally without Google Cloud OAuth credentials.
-- **Out-of-Band FileResolver**: Downloads files via `mockdrive://` pointer IDs rather than transmitting Base64 binary strings over the WebSocket.
-- **Multimodal Summarization**: Uses `gemini-3.5-flash-lite` to generate concise executive summaries of uploaded documents.
+> 💡 **Tip:** Use [Antigravity CLI](https://antigravity.google/) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
 
-## Running
+## Requirements
 
-1. Navigate to the agent directory:
-   ```bash
-   cd samples/community/agent/adk/file_upload_summarizer
-   ```
-2. Set up your environment variables (requires `GEMINI_API_KEY` or Vertex AI configuration):
-   ```bash
-   export GEMINI_API_KEY="your-api-key"
-   ```
-3. Start the server on port 10008:
-   ```bash
-   uv run . --port 10008
-   ```
+Before you begin, ensure you have:
+- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
+- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
+- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
+
+
+## Quick Start
+
+Install `agents-cli` and its skills if not already installed:
+
+```bash
+uvx google-agents-cli setup
+```
+
+Install required packages:
+
+```bash
+agents-cli install
+```
+
+Test the agent with a local web server:
+
+```bash
+agents-cli playground
+```
+
+You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
+
+## Commands
+
+| Command              | Description                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `agents-cli install` | Install dependencies using uv                                                         |
+| `agents-cli playground` | Launch local development environment                                                  |
+| `agents-cli lint`    | Run code quality checks                                                               |
+| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
+| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
+| `agents-cli deploy`  | Deploy agent to Cloud Run                                                                   || [A2A Inspector](https://github.com/a2aproject/a2a-inspector) | Launch A2A Protocol Inspector                                                        |
+
+## 🛠️ Project Management
+
+| Command | What It Does |
+|---------|--------------|
+| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
+| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
+| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
+
+---
+
+## Development
+
+Edit your agent logic in `file_upload_summarizer/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
+
+## Deployment
+
+```bash
+gcloud config set project <your-project-id>
+agents-cli deploy
+```
+
+To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
+To set up your production infrastructure, run `agents-cli infra cicd`.
+
+## Observability
+
+Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+
+## A2A Inspector
+
+This agent supports the [A2A Protocol](https://a2a-protocol.org/). Use the [A2A Inspector](https://github.com/a2aproject/a2a-inspector) to test interoperability.
+See the [A2A Inspector docs](https://github.com/a2aproject/a2a-inspector) for details.

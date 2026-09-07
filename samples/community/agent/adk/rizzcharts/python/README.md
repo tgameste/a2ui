@@ -1,40 +1,93 @@
-# A2UI Rizzcharts Agent Sample
+# python
 
-This sample uses the Agent Development Kit (ADK) along with the A2A protocol to create an ecommerce dashboard using a custom catalog that is hosted as an A2A server.
+Sample Google ADK-based rizzcharts agent that uses a2ui extension with a custom catalog and is hosted as an A2A server agent.
+Agent generated with `agents-cli` version `1.4.2`
 
-## Prerequisites
+## Project Structure
 
-- Python 3.9 or higher
-- [UV](https://docs.astral.sh/uv/)
-- Access to an LLM and API Key
+```
+python/
+├── python/         # Core agent code
+│   ├── agent.py               # Main agent logic
+│   ├── fast_api_app.py        # FastAPI Backend server
+│   └── app_utils/             # App utilities and helpers
+├── tests/                     # Unit, integration, and load tests
+├── GEMINI.md                  # AI-assisted development guide
+└── pyproject.toml             # Project dependencies
+```
 
-## Running the Sample
+> 💡 **Tip:** Use [Antigravity CLI](https://antigravity.google/) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
 
-1. Navigate to the samples directory:
+## Requirements
 
-   ```bash
-   cd samples/agent/adk/rizzcharts/python
-   ```
+Before you begin, ensure you have:
+- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
+- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
+- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
 
-2. Create an environment file with your API key:
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your actual API key (do not commit .env)
-   ```
+## Quick Start
 
-3. Run an agent:
+Install `agents-cli` and its skills if not already installed:
 
-   ```bash
-   uv run .
-   ```
+```bash
+uvx google-agents-cli setup
+```
 
-## Disclaimer
+Install required packages:
 
-Important: The sample code provided is for demonstration purposes and illustrates the mechanics of A2UI and the Agent-to-Agent (A2A) protocol. When building production applications, it is critical to treat any agent operating outside of your direct control as a potentially untrusted entity.
+```bash
+agents-cli install
+```
 
-All operational data received from an external agent—including its AgentCard, messages, artifacts, and task statuses—should be handled as untrusted input. For example, a malicious agent could provide crafted data in its fields (e.g., name, skills.description) that, if used without sanitization to construct prompts for a Large Language Model (LLM), could expose your application to prompt injection attacks.
+Test the agent with a local web server:
 
-Similarly, any UI definition or data stream received must be treated as untrusted. Malicious agents could attempt to spoof legitimate interfaces to deceive users (phishing), inject malicious scripts via property values (XSS), or generate excessive layout complexity to degrade client performance (DoS). If your application supports optional embedded content (such as iframes or web views), additional care must be taken to prevent exposure to malicious external sites.
+```bash
+agents-cli playground
+```
 
-Developer Responsibility: Failure to properly validate data and strictly sandbox rendered content can introduce severe vulnerabilities. Developers are responsible for implementing appropriate security measures—such as input sanitization, Content Security Policies (CSP), strict isolation for optional embedded content, and secure credential handling—to protect their systems and users.
+You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
+
+## Commands
+
+| Command              | Description                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `agents-cli install` | Install dependencies using uv                                                         |
+| `agents-cli playground` | Launch local development environment                                                  |
+| `agents-cli lint`    | Run code quality checks                                                               |
+| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
+| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
+| `agents-cli deploy`  | Deploy agent to Cloud Run                                                                   || [A2A Inspector](https://github.com/a2aproject/a2a-inspector) | Launch A2A Protocol Inspector                                                        |
+
+## 🛠️ Project Management
+
+| Command | What It Does |
+|---------|--------------|
+| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
+| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
+| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
+
+---
+
+## Development
+
+Edit your agent logic in `python/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
+
+## Deployment
+
+```bash
+gcloud config set project <your-project-id>
+agents-cli deploy
+```
+
+To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
+To set up your production infrastructure, run `agents-cli infra cicd`.
+
+## Observability
+
+Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+
+## A2A Inspector
+
+This agent supports the [A2A Protocol](https://a2a-protocol.org/). Use the [A2A Inspector](https://github.com/a2aproject/a2a-inspector) to test interoperability.
+See the [A2A Inspector docs](https://github.com/a2aproject/a2a-inspector) for details.

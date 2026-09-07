@@ -1,69 +1,93 @@
-# MCP App Standalone Sample
+# mcp-apps-in-a2ui-sample
 
-This sample demonstrates how to integrate an **MCP (Model Context Protocol) App** within the A2UI environment using a secure, double-sandboxed iframe architecture.
+Sample MCP App with 2-Way Communication
+Agent generated with `agents-cli` version `1.4.2`
 
-## Overview
+## Project Structure
 
-The sample consists of:
-
-1.  **Agent** (`agent.py`): A Python FastAPI server that acts as the agent. It serves the UI manifest containing the `McpApp` component and handles tool calls forwarded by the client.
-2.  **Client** (`samples/client/lit/mcp-apps-in-a2ui-sample`): A Lit-based client application that renders the A2UI interface and the `McpApp` component.
-
-## Architecture
-
-To ensure security when running untrusted third-party widget code, this sample uses a **double-iframe isolation** model:
-
-- **Host Page**: The main A2UI application.
-- **Sandbox Proxy**: An iframe hosted on a separate origin (`127.0.0.1`) to enforce origin isolation.
-- **Untrusted App**: The actual MCP app content, injected dynamically into an inner iframe with restricted permissions.
-
-Communication between the host and the app is handled via the `@modelcontextprotocol/ext-apps` package using standard `postMessage` channels.
-
-## Prerequisites
-
-- Node.js (v18+ recommended)
-- Python 3.10+ with `uv` package manager
-
-## How to Run
-
-### 1. Start the Client Dev Server
-
-Navigate to the client sample directory and start the Vite server:
-
-```bash
-cd ../../../client/lit/mcp-apps-in-a2ui-sample
-yarn dev
+```
+mcp-apps-in-a2ui-sample/
+├── mcp_apps_in_a2ui_sample/         # Core agent code
+│   ├── agent.py               # Main agent logic
+│   ├── fast_api_app.py        # FastAPI Backend server
+│   └── app_utils/             # App utilities and helpers
+├── tests/                     # Unit, integration, and load tests
+├── GEMINI.md                  # AI-assisted development guide
+└── pyproject.toml             # Project dependencies
 ```
 
-This will start the server at `http://localhost:5173`.
+> 💡 **Tip:** Use [Antigravity CLI](https://antigravity.google/) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
 
-### 2. Start the Agent
+## Requirements
 
-In a separate terminal, navigate to this directory and start the agent:
+Before you begin, ensure you have:
+- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
+- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
+- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
+
+
+## Quick Start
+
+Install `agents-cli` and its skills if not already installed:
 
 ```bash
-cd samples/agent/adk/mcp-apps-in-a2ui-sample
-uv run agent.py
+uvx google-agents-cli setup
 ```
 
-The agent will run on `http://localhost:8000`.
+Install required packages:
 
-### 3. View the Application
+```bash
+agents-cli install
+```
 
-Open your browser and navigate to `http://localhost:5173`. You should see the A2UI interface loading the MCP App. Clicking the "Call Agent Tool" button inside the iframe will trigger an action that is handled by the agent.
+Test the agent with a local web server:
 
-## Development Notes
+```bash
+agents-cli playground
+```
 
-- **Module Resolution**: Because this is a development environment, the iframe dynamically loads the `app-with-deps.js` bundle from the workspace's `node_modules` via Vite's `/@fs/` prefix. An `importmap` is used to resolve the bare imports inside that bundle.
-- **CORS**: The iframe must be loaded from `127.0.0.1` to match the origin expected by the sandbox proxy and avoid CORS blocks.
-- **Content Security Policy (CSP)**: This sample uses a static CSP in `sandbox.html` that allows `'unsafe-inline'` and `'unsafe-eval'` for compatibility with development tools. For production deployments, it is recommended to remove these relaxed settings and implement a dynamic CSP derived from app metadata as recommended by the MCP Apps spec.
+You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
 
-## Disclaimer
+## Commands
 
-Important: The sample code provided is for demonstration purposes and illustrates the mechanics of A2UI and the Agent-to-Agent (A2A) protocol. When building production applications, it is critical to treat any agent operating outside of your direct control as a potentially untrusted entity.
+| Command              | Description                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `agents-cli install` | Install dependencies using uv                                                         |
+| `agents-cli playground` | Launch local development environment                                                  |
+| `agents-cli lint`    | Run code quality checks                                                               |
+| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
+| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
+| `agents-cli deploy`  | Deploy agent to Cloud Run                                                                   || [A2A Inspector](https://github.com/a2aproject/a2a-inspector) | Launch A2A Protocol Inspector                                                        |
 
-All operational data received from an external agent—including its AgentCard, messages, artifacts, and task statuses—should be handled as untrusted input. For example, a malicious agent could provide crafted data in its fields (e.g., name, skills.description) that, if used without sanitization to construct prompts for a Large Language Model (LLM), could expose your application to prompt injection attacks.
+## 🛠️ Project Management
 
-Similarly, any UI definition or data stream received must be treated as untrusted. Malicious agents could attempt to spoof legitimate interfaces to deceive users (phishing), inject malicious scripts via property values (XSS), or generate excessive layout complexity to degrade client performance (DoS). If your application supports optional embedded content (such as iframes or web views), additional care must be taken to prevent exposure to malicious external sites.
+| Command | What It Does |
+|---------|--------------|
+| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
+| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
+| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
 
-Developer Responsibility: Failure to properly validate data and strictly sandbox rendered content can introduce severe vulnerabilities. Developers are responsible for implementing appropriate security measures—such as input sanitization, Content Security Policies (CSP), strict isolation for optional embedded content, and secure credential handling—to protect their systems and users.
+---
+
+## Development
+
+Edit your agent logic in `mcp_apps_in_a2ui_sample/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
+
+## Deployment
+
+```bash
+gcloud config set project <your-project-id>
+agents-cli deploy
+```
+
+To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
+To set up your production infrastructure, run `agents-cli infra cicd`.
+
+## Observability
+
+Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+
+## A2A Inspector
+
+This agent supports the [A2A Protocol](https://a2a-protocol.org/). Use the [A2A Inspector](https://github.com/a2aproject/a2a-inspector) to test interoperability.
+See the [A2A Inspector docs](https://github.com/a2aproject/a2a-inspector) for details.

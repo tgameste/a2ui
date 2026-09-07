@@ -1,51 +1,93 @@
-# A2UI Contact Multiple Surfaces Agent Sample
+# custom-components-example
 
-This sample uses the Agent Development Kit (ADK) along with the A2A protocol to create a simple "Contact Lookup" agent that is hosted as an A2A server.
+Sample Google ADK-based Contact Lookup agent that uses a2ui extension and is hosted as an A2A server agent.
+Agent generated with `agents-cli` version `1.4.2`
 
-## Prerequisites
+## Project Structure
 
-- Python — see `requires-python` in [pyproject.toml](pyproject.toml)
-- [UV](https://docs.astral.sh/uv/)
-- Access to an LLM and API Key
+```
+custom-components-example/
+├── custom_components_example/         # Core agent code
+│   ├── agent.py               # Main agent logic
+│   ├── fast_api_app.py        # FastAPI Backend server
+│   └── app_utils/             # App utilities and helpers
+├── tests/                     # Unit, integration, and load tests
+├── GEMINI.md                  # AI-assisted development guide
+└── pyproject.toml             # Project dependencies
+```
 
-## Running the Sample
+> 💡 **Tip:** Use [Antigravity CLI](https://antigravity.google/) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
 
-1. Navigate to the samples directory:
+## Requirements
 
-   ```bash
-   cd samples/agent/adk/custom-components-example
-   ```
+Before you begin, ensure you have:
+- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
+- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
+- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
 
-2. Create an environment file with your API key:
 
-   ```bash
-   echo "GEMINI_API_KEY=your_api_key_here" > .env
-   ```
+## Quick Start
 
-3. Run the server:
+Install `agents-cli` and its skills if not already installed:
 
-   ```bash
-   uv run .
-   ```
+```bash
+uvx google-agents-cli setup
+```
 
-   The server listens on `http://localhost:10004` by default (override with `uv run . --port <port>`). It uses the Gemini `gemini-3-flash-preview` model by default; override it via the `LITELLM_MODEL` environment variable (e.g. `LITELLM_MODEL=gemini/gemini-2.5-flash`).
+Install required packages:
 
-4. Verify the server is running by fetching its agent card:
+```bash
+agents-cli install
+```
 
-   ```bash
-   curl http://localhost:10004/.well-known/agent-card.json
-   ```
+Test the agent with a local web server:
 
-5. (Optional) Run the server with standard `WebFrame` instead of the custom `McpAppsCustomComponent`:
+```bash
+agents-cli playground
+```
 
-   ```bash
-   USE_MCP_SANDBOX=false uv run .
-   ```
+You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
 
-## Disclaimer
+## Commands
 
-Important: The sample code provided is for demonstration purposes and illustrates the mechanics of the Agent-to-Agent (A2A) protocol. When building production applications, it is critical to treat any agent operating outside of your direct control as a potentially untrusted entity.
+| Command              | Description                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `agents-cli install` | Install dependencies using uv                                                         |
+| `agents-cli playground` | Launch local development environment                                                  |
+| `agents-cli lint`    | Run code quality checks                                                               |
+| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
+| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
+| `agents-cli deploy`  | Deploy agent to Cloud Run                                                                   || [A2A Inspector](https://github.com/a2aproject/a2a-inspector) | Launch A2A Protocol Inspector                                                        |
 
-All data received from an external agent—including but not limited to its AgentCard, messages, artifacts, and task statuses—should be handled as untrusted input. For example, a malicious agent could provide an AgentCard containing crafted data in its fields (e.g., description, name, skills.description). If this data is used without sanitization to construct prompts for a Large Language Model (LLM), it could expose your application to prompt injection attacks. Failure to properly validate and sanitize this data before use can introduce security vulnerabilities into your application.
+## 🛠️ Project Management
 
-Developers are responsible for implementing appropriate security measures, such as input validation and secure handling of credentials to protect their systems and users.
+| Command | What It Does |
+|---------|--------------|
+| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
+| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
+| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
+
+---
+
+## Development
+
+Edit your agent logic in `custom_components_example/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
+
+## Deployment
+
+```bash
+gcloud config set project <your-project-id>
+agents-cli deploy
+```
+
+To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
+To set up your production infrastructure, run `agents-cli infra cicd`.
+
+## Observability
+
+Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+
+## A2A Inspector
+
+This agent supports the [A2A Protocol](https://a2a-protocol.org/). Use the [A2A Inspector](https://github.com/a2aproject/a2a-inspector) to test interoperability.
+See the [A2A Inspector docs](https://github.com/a2aproject/a2a-inspector) for details.

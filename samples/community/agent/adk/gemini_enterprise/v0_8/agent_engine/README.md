@@ -1,238 +1,94 @@
-# Register an A2UI Agent deployed on Vertex AI Agent Engine with Gemini Enterprise
+# agent-engine
 
-This sample demonstrates how to deploy an A2UI Agent on **Agent Engine** and
-register on **Gemini Enterprise**.
+Sample Google ADK-based Contact Lookup agent that uses a2ui extension and is hosted as an A2A agent on Agent Engine.
+Agent generated with `agents-cli` version `1.4.2`
 
-## Overview
-
-High level steps:
-
-- Config Authorization
-- Setup environment variables
-- Develop A2UI agent with ADK + A2A (sample code provided)
-- Deploy the agent to Agent Engine
-- Register the agent on Gemini Enterprise
-
-## Config Authorization
-
-Check **Before you begin** section and follow **Obtain authorization details**
-section on
-[Register and manage A2A agents](https://docs.cloud.google.com/gemini/enterprise/docs/register-and-manage-an-a2a-agent).
-Download JSON that looks like:
+## Project Structure
 
 ```
-{
-    "web": {
-        "client_id": "<client id>",
-        "project_id": "<Google Cloud project id>",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": "<secret>",
-        "redirect_uris": [
-            "https://vertexaisearch.cloud.google.com/oauth-redirect",
-            "https://vertexaisearch.cloud.google.com/static/oauth/oauth.html"
-        ]
-    }
-}
+agent-engine/
+├── app/         # Core agent code
+│   ├── agent.py               # Main agent logic
+│   ├── fast_api_app.py        # FastAPI Backend server
+│   └── app_utils/             # App utilities and helpers
+├── tests/                     # Unit, integration, and load tests
+├── GEMINI.md                  # AI-assisted development guide
+└── pyproject.toml             # Project dependencies
 ```
 
-NOTE: For this deployment, you can skip the rest of **Register and manage A2A
-agents** page.
+> 💡 **Tip:** Use [Antigravity CLI](https://antigravity.google/) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
 
-Replace **YOUR_CLIENT_ID** with `client_id` which can be found in the downloaded
-json and save the following as **authorizationUri**
+## Requirements
 
-```
-https://accounts.google.com/o/oauth2/v2/auth?client_id=<YOUR_CLIENT_ID>&redirect_uri=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fstatic%2Foauth%2Foauth.html&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&include_granted_scopes=true&response_type=code&access_type=offline&prompt=consent
-```
+Before you begin, ensure you have:
+- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
+- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
+- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
 
-In your console, run this:
 
-```
-curl -X POST \
-   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-   -H "Content-Type: application/json" \
-   -H "X-Goog-User-Project: <YOUR_PROJECT_ID>" \
-   "https://<ENDPOINT_LOCATION>-discoveryengine.googleapis.com/v1alpha/projects/<YOUR_PROJECT_ID>/locations/<LOCATION>/authorizations?authorizationId=<AUTH_ID>" \
-   -d '{
-      "name": "projects/<YOUR_PROJECT_ID>/locations/<LOCATION>/authorizations/<AUTH_ID>",
-      "serverSideOauth2": {
-         "clientId": "<OAUTH_CLIENT_ID>",
-         "clientSecret": "<OAUTH_CLIENT_SECRET>",
-         "authorizationUri": "<OAUTH_AUTH_URI>",
-         "tokenUri": "<OAUTH_TOKEN_URI>"
-      }
-   }'
+## Quick Start
+
+Install `agents-cli` and its skills if not already installed:
+
+```bash
+uvx google-agents-cli setup
 ```
 
-Replace the following:
+Install required packages:
 
-- **YOUR_PROJECT_ID**: the ID of your project. There are 3 occasions
-- **ENDPOINT_LOCATION**: the multi-region for your API request. Specify one of
-  the following values:
-  - _us_ for the US multi-region
-  - _eu_ for the EU multi-region
-  - _global_ for the Global location
-- **LOCATION**: the multi-region of your data store: _global_, _us_, or _eu_.
-  There are 2 occasions
-- **AUTH_ID**: The ID of the authorization resource. This is an arbitrary
-  alphanumeric ID that you define. You need to reference this ID later when
-  registering an Agent that requires OAuth support. There are 2 occasions.
-- **OAUTH_CLIENT_ID**: copy `client_id` from the downloaded JSON.
-- **OAUTH_CLIENT_SECRET**: copy `client_secret` from the downloaded JSON.
-- **OAUTH_AUTH_URI**: the value of **authorizationUri**. See above.
-- **OAUTH_TOKEN_URI**: copy `token_uri` from the downloaded JSON.
-
-NOTE: if `$(gcloud auth print-access-token)` does not work for you, replace it
-with `$(gcloud auth application-default print-access-token)` and try again.
-
-As result, you will get **AGENT_AUTHORIZATION** like this:
-
-```
-projects/PROJECT_NUMBER/locations/global/authorizations/<AUTH_ID>
+```bash
+agents-cli install
 ```
 
-The value will be used as an environment variable described below.
+Test the agent with a local web server:
 
-NOTE: if you already have an agent that is deployed to Agent Engine, skip to
-**Manually Register An Agent** section.
+```bash
+agents-cli playground
+```
 
-## Setup Environment Variables
+You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
 
-1.  **Copy `.env.example`:** Duplicate the `.env.example` file and rename it to
-    `.env`.
-    - `cd /path/to/agent_engine`
-    - `cp .env.example .env`
-2.  **Fill `.env`:** Update the `.env` file with your specific Google Cloud
-    project details:
-    - `PROJECT_ID`: Your Google Cloud Project ID.
-    - `LOCATION`: The Google Cloud region you want to deploy the agent in
-      (e.g., `us-central1`). This location is **not** the same as the
-      _location_ used in the command above.
-    - `STORAGE_BUCKET`: A Google Cloud Storage bucket name for staging. It
-      starts with **"gs://"**.
-    - `GEMINI_ENTERPRISE_APP_ID`: Your Gemini Enterprise Application ID. You
-      can create a new App or use an existing one on Google Cloud Gemini
-      Enterprise.
-    - `AGENT_AUTHORIZATION`: the value **AGENT_AUTHORIZATION** obtained above.
+## Commands
 
-## Running the Script
+| Command              | Description                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `agents-cli install` | Install dependencies using uv                                                         |
+| `agents-cli playground` | Launch local development environment                                                  |
+| `agents-cli lint`    | Run code quality checks                                                               |
+| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
+| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
+| `agents-cli deploy`  | Deploy agent to Agent Runtime                                                                |
+| `agents-cli publish gemini-enterprise` | Register deployed agent to Gemini Enterprise                    || [A2A Inspector](https://github.com/a2aproject/a2a-inspector) | Launch A2A Protocol Inspector                                                        |
 
-The `main.py` script performs the following actions:
+## 🛠️ Project Management
 
-1.  Initializes the Vertex AI client.
-2.  Defines a sample "Contact Card Agent" skill and creates an agent card.
-3.  Creates a local `A2aAgent` instance.
-4.  Deploys the agent to Vertex AI Agent Engine (`client.agent_engines.create`).
-5.  Fetches the deployed agent's card.
-6.  Registers the agent on Gemini Enterprise using the Discovery Engine API.
+| Command | What It Does |
+|---------|--------------|
+| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
+| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
+| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
 
-To run the script using `uv`:
+---
 
-1.  **Navigate to the script directory:**
-    - `cd /path/to/agent_engine`
-2.  **Create and activate a virtual environment:**
-    - `uv venv`
-    - `source .venv/bin/activate`
-3.  **Install dependencies:**
-    - `uv sync --locked`
-4.  **Run the script:**
-    - `uv run deploy.py`
-    - It may take 5-10 minutes to finish.
+## Development
 
-## Manually Register An Agent
+Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
 
-If you have an Agent that is already deployed to Agent Engine, you can manually
-register it on Gemini Enterprise without running "main.py" script.
+## Deployment
 
-1.  Complete **Config Authorization** section above.
-2.  Open Google Cloud **Gemini Enterprise**.
-3.  Click on the **App** you want to register your agent.
-    - If you don't see the app being listed, click **Edit** to switch location
-4.  Select **Agents** from the left nav bar.
-5.  Click **Add agent** and select **Add** on **A2A** card.
-6.  Copy this following JSON to the "Agent Card JSON" input box.
+```bash
+gcloud config set project <your-project-id>
+agents-cli deploy
+```
 
-    ```
-    {
-      "name": "Test Contact Card Agent",
-      "url": "https://<LOCATION>-aiplatform.googleapis.com/v1beta1/<RESOURCE_NAME>/a2a",
-      "description": "A helpful assistant agent that can find contact card s.",
-      "skills": [
-        {
-          "description": "A helpful assistant agent that can find contact cards.",
-          "tags": [
-            "Contact-Card"
-          ],
-          "name": "Contact Card Agent",
-          "examples": [
-            "Who is John Doe?",
-            "List all contact cards."
-          ],
-          "id": "contact_card_agent"
-        }
-      ],
-      "version": "1.0.0",
-      "capabilities": {
-        "streaming": false,
-        "extensions": [
-          {
-            "uri": "https://a2ui.org/a2a-extension/a2ui/v0.8",
-            "description": "Ability to render A2UI",
-            "required": false,
-            "params": {
-              "supportedCatalogIds": [
-                "https://a2ui.org/specification/v0_8/standard_catalog_definition.json"
-              ]
-            }
-          }
-        ]
-      },
-      "protocolVersion": "0.3.0",
-      "defaultOutputModes": [
-        "application/json"
-      ],
-      "defaultInputModes": [
-        "text/plain"
-      ],
-      "supportsAuthenticatedExtendedCard": true,
-      "preferredTransport": "JSONRPC"
-    }
-    ```
+To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
+To set up your production infrastructure, run `agents-cli infra cicd`.
 
-    Replace **LOCATION** and **RESOURCE_NAME**.
-    - LOCATION is where you deploy your agent. For example; us-central1.
-    - RESOURCE_NAME can be found on Google Cloud **Agent Engine**: click the
-      agent; click **Service Configuration**; select **Deployment details**;
-      copy **Resource name**.
+## Observability
 
-    Update _name_, _description_, _skills_, _version_ as needed. Leave other
-    values unchanged.
+Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
 
-7.  Click **Preview Agent Details**
+## A2A Inspector
 
-8.  Click **Next**
-
-9.  Fill the **Agent authorization** form:
-    - Copy `client_id`, `client_secret`, `token_uri` from the downloaded JSON.
-    - Copy **authorizationUri** value from the above to **Authorization URL**.
-    - Leave **Scopes** field empty.
-    - Click **Finish**
-
-## Test Your Agent
-
-1.  Open Google Cloud Console and search for **"Gemini Enterprise"** and click
-    on it.
-2.  Open the project you used in the above setting.
-3.  Click on the **App** you used to register your agent.
-    - If you don't see your app being listed, click **"Edit"** to switch
-      location
-4.  Select **"Agents"** from the left nav bar.
-5.  Click the three-dot button on the **"Actions"** column and select
-    **"Previwe"** menu.
-6.  It will open Gemini Enterprise Agent page.
-7.  Try queries like _"Find contact card of Sarah"_.
-    - If this is the first time you start a chat with the agent, it will ask
-      for manual authorization.
-8.  You should see a Contact Card being rendered on Gemini Enterprise.
+This agent supports the [A2A Protocol](https://a2a-protocol.org/). Use the [A2A Inspector](https://github.com/a2aproject/a2a-inspector) to test interoperability.
+See the [A2A Inspector docs](https://github.com/a2aproject/a2a-inspector) for details.

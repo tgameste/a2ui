@@ -585,3 +585,5 @@ class ContactAgent:
                 )
             ],
         }
+
+root_agent = ContactAgent(base_url=os.getenv("BASE_URL", "http://localhost:10002"))

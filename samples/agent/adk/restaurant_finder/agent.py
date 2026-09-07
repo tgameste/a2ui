@@ -409,3 +409,6 @@ class RestaurantAgent:
             ],
         }
         # --- End: UI Validation and Retry Logic ---
+
+root_agent = RestaurantAgent(base_url=os.getenv("BASE_URL", "http://localhost:10002"))
+

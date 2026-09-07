@@ -398,3 +398,5 @@ class ContactAgent:
             )
         ]
         # --- End: UI Validation and Retry Logic ---
+
+root_agent = app
